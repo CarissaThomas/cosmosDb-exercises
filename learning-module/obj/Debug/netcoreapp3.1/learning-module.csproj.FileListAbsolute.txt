@@ -1,0 +1,13 @@
+D:\repos\ComsosDb-Sampler\learning-module\bin\Debug\netcoreapp3.1\learning-module.exe
+D:\repos\ComsosDb-Sampler\learning-module\bin\Debug\netcoreapp3.1\learning-module.deps.json
+D:\repos\ComsosDb-Sampler\learning-module\bin\Debug\netcoreapp3.1\learning-module.runtimeconfig.json
+D:\repos\ComsosDb-Sampler\learning-module\bin\Debug\netcoreapp3.1\learning-module.runtimeconfig.dev.json
+D:\repos\ComsosDb-Sampler\learning-module\bin\Debug\netcoreapp3.1\learning-module.dll
+D:\repos\ComsosDb-Sampler\learning-module\bin\Debug\netcoreapp3.1\learning-module.pdb
+D:\repos\ComsosDb-Sampler\learning-module\obj\Debug\netcoreapp3.1\learning-module.csprojAssemblyReference.cache
+D:\repos\ComsosDb-Sampler\learning-module\obj\Debug\netcoreapp3.1\learning-module.AssemblyInfoInputs.cache
+D:\repos\ComsosDb-Sampler\learning-module\obj\Debug\netcoreapp3.1\learning-module.AssemblyInfo.cs
+D:\repos\ComsosDb-Sampler\learning-module\obj\Debug\netcoreapp3.1\learning-module.csproj.CoreCompileInputs.cache
+D:\repos\ComsosDb-Sampler\learning-module\obj\Debug\netcoreapp3.1\learning-module.dll
+D:\repos\ComsosDb-Sampler\learning-module\obj\Debug\netcoreapp3.1\learning-module.pdb
+D:\repos\ComsosDb-Sampler\learning-module\obj\Debug\netcoreapp3.1\learning-module.genruntimeconfig.cache
