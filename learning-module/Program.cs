@@ -12,13 +12,13 @@ namespace learning_module
     class Program
     {
         private DocumentClient client;
-
         static void Main(string[] args)
         {
             try
             {
                 Program p = new Program();
-                p.BasicOperations().Wait();
+
+                p.CheckDatabaseAndCollection().Wait();
             }
             catch (DocumentClientException de)
             {
@@ -37,53 +37,77 @@ namespace learning_module
             }
         }
 
-        private async Task BasicOperations()
+        private static DocumentClient InitalizeDocumentClient()
         {
-            this.client = new DocumentClient(new Uri(ConfigurationManager.AppSettings["accountEndpoint"]), ConfigurationManager.AppSettings["accountKey"]);
+            return new DocumentClient(new Uri(ConfigurationManager.AppSettings["accountEndpoint"]), ConfigurationManager.AppSettings["accountKey"]);
+        }
 
-            await this.client.CreateDatabaseIfNotExistsAsync(new Database { Id = "Users" });
+        private static async Task<ResourceResponse<Database>> CreateDatabaseIfItDoesntExist(DocumentClient client)
+        {
+            return await client.CreateDatabaseIfNotExistsAsync(new Database { Id = "Users" });
+        }
 
-            await this.client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("Users"), new DocumentCollection { Id = "WebCustomers" });
+        private static async Task<ResourceResponse<DocumentCollection>> CreateDocumentCollectionIfNotExistsAsync(DocumentClient client)
+        {
+            return await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("Users"), new DocumentCollection { Id = "WebCustomers" }); ;
+        }
 
-            Operations operations = new Operations(); 
+        private async Task CheckDatabaseAndCollection()
+        {
+            this.client = InitalizeDocumentClient();
 
-            Console.WriteLine("Database and collection validation complete");
+            await CreateDatabaseIfItDoesntExist(client);
 
-            User yanhe = new User
-            {
-                Id = "1",
-                UserId = "yanhe",
-                LastName = "He",
-                FirstName = "Yan",
-                Email = "yanhe@contoso.com",
-                OrderHistory = new OrderHistory[]
-            {
-            new OrderHistory {
-                OrderId = "1000",
-                DateShipped = "08/17/2018",
-                Total = "52.49"
-            }
-            },
-                ShippingPreference = new ShippingPreference[]
-            {
-                new ShippingPreference {
-                        Priority = 1,
-                        AddressLine1 = "90 W 8th St",
-                        City = "New York",
-                        State = "NY",
-                        ZipCode = "10001",
-                        Country = "USA"
-                }
-                },
-            };
+            await CreateDocumentCollectionIfNotExistsAsync(client);
+        }
 
-            await operations.CreateUserDocumentIfNotExists("Users", "WebCustomers", yanhe, this.client);
+        private async Task<User> CreateUser(DocumentClient client)
+        {
+            Operations operations = new Operations();
+
+            User yanhe = CreateYanhe();
+
+            return await operations.CreateUserDocumentIfNotExists("Users", "WebCustomers", yanhe, client);
+        }
+
+         private async Task<User> ReadUser(DocumentClient client)
+        {
+            Operations operations = new Operations();
+
+            User yanhe = CreateYanhe();
+
+            //CREATE USER HERE IN TESTS
+
+            return await operations.ReadUserDocument("Users", "WebCustomers", yanhe, client);
+        }
+
+        private async Task<User> UpdateUser(DocumentClient client)
+        {
+            Operations operations = new Operations();
+
+            User yanhe = CreateYanhe();
 
             yanhe.LastName = "Suh";
 
-            await operations.ReplaceUserDocument("Users", "WebCustomers", yanhe, this.client);
+            return await operations.ReplaceUserDocument("Users", "WebCustomers", yanhe, client);
+        }
 
-            User nelapin = new User
+        private async Task<User> DeleteUser(DocumentClient client)
+        {
+            Operations operations = new Operations();
+
+            User nelapin = CreateNelapin();
+
+            await operations.CreateUserDocumentIfNotExists("Users", "WebCustomers", nelapin, client);
+
+            await operations.ReadUserDocument("Users", "WebCustomers", nelapin, client);
+
+            return await operations.DeleteUserDocument("Users", "WebCustomers", nelapin, this.client);
+        }
+
+        private static User CreateNelapin()
+        {
+            return new User
             {
                 Id = "2",
                 UserId = "nelapin",
@@ -125,15 +149,37 @@ namespace learning_module
                     }
                 }
             };
-
-            await operations.CreateUserDocumentIfNotExists("Users", "WebCustomers", nelapin, this.client);
-
-            await operations.ReadUserDocument("Users", "WebCustomers", yanhe, this.client);
-
-            await operations.DeleteUserDocument("Users", "WebCustomers", yanhe, this.client);
         }
 
-        
-
+        private static User CreateYanhe()
+        {
+            return new User
+            {
+                Id = "1",
+                UserId = "yanhe",
+                LastName = "He",
+                FirstName = "Yan",
+                Email = "yanhe@contoso.com",
+                OrderHistory = new OrderHistory[]
+            {
+            new OrderHistory {
+                OrderId = "1000",
+                DateShipped = "08/17/2018",
+                Total = "52.49"
+            }
+            },
+                ShippingPreference = new ShippingPreference[]
+            {
+                new ShippingPreference {
+                        Priority = 1,
+                        AddressLine1 = "90 W 8th St",
+                        City = "New York",
+                        State = "NY",
+                        ZipCode = "10001",
+                        Country = "USA"
+                }
+                },
+            };
+        }
     }
 }
