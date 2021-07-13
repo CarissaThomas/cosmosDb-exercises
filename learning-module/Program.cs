@@ -36,7 +36,7 @@ namespace learning_module
                 Console.ReadKey();
             }
         }
-        
+
         private async Task BasicOperations()
         {
             this.client = new DocumentClient(new Uri(ConfigurationManager.AppSettings["accountEndpoint"]), ConfigurationManager.AppSettings["accountKey"]);
@@ -45,8 +45,182 @@ namespace learning_module
 
             await this.client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("Users"), new DocumentCollection { Id = "WebCustomers" });
 
+
             Console.WriteLine("Database and collection validation complete");
+
+            User yanhe = new User
+            {
+                Id = "1",
+                UserId = "yanhe",
+                LastName = "He",
+                FirstName = "Yan",
+                Email = "yanhe@contoso.com",
+                OrderHistory = new OrderHistory[]
+            {
+            new OrderHistory {
+                OrderId = "1000",
+                DateShipped = "08/17/2018",
+                Total = "52.49"
+            }
+            },
+                ShippingPreference = new ShippingPreference[]
+            {
+                new ShippingPreference {
+                        Priority = 1,
+                        AddressLine1 = "90 W 8th St",
+                        City = "New York",
+                        State = "NY",
+                        ZipCode = "10001",
+                        Country = "USA"
+                }
+                },
+            };
+
+            await this.CreateUserDocumentIfNotExists("Users", "WebCustomers", yanhe);
+
+            yanhe.LastName = "Suh";
+
+            await this.ReplaceUserDocument("Users", "WebCustomers", yanhe);
+
+            User nelapin = new User
+            {
+                Id = "2",
+                UserId = "nelapin",
+                LastName = "Pindakova",
+                FirstName = "Nela",
+                Email = "nelapin@contoso.com",
+                Dividend = "8.50",
+                OrderHistory = new OrderHistory[]
+                {
+                    new OrderHistory {
+                    OrderId = "1001",
+                    DateShipped = "08/17/2018",
+                    Total = "105.89"
+                }
+                },
+                ShippingPreference = new ShippingPreference[]
+                {
+                    new ShippingPreference {
+                    Priority = 1,
+                    AddressLine1 = "505 NW 5th St",
+                    City = "New York",
+                    State = "NY",
+                    ZipCode = "10001",
+                    Country = "USA"
+                    },
+                new ShippingPreference {
+                        Priority = 2,
+                        AddressLine1 = "505 NW 5th St",
+                        City = "New York",
+                        State = "NY",
+                        ZipCode = "10001",
+                        Country = "USA"
+                    }
+                },
+                Coupons = new CouponsUsed[]
+                {
+                new CouponsUsed{
+                    CouponCode = "Fall2018"
+                    }
+                }
+            };
+
+            await this.CreateUserDocumentIfNotExists("Users", "WebCustomers", nelapin);
+
+            await this.ReadUserDocument("Users", "WebCustomers", yanhe);
+
+            await this.DeleteUserDocument("Users", "WebCustomers", yanhe);
         }
+
+        private void WriteToConsoleAndPromptToContinue(string format, params object[] args)
+        {
+            Console.WriteLine(format, args);
+            Console.WriteLine("Press any key to continue ...");
+            Console.ReadKey();
+        }
+
+        private async Task CreateUserDocumentIfNotExists(string databaseName, string collectionName, User user)
+        {
+            try
+            {
+                await this.client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, user.Id), new RequestOptions { PartitionKey = new PartitionKey(user.UserId) });
+                this.WriteToConsoleAndPromptToContinue("User {0} already exists in the database", user.Id);
+            }
+            catch (DocumentClientException de)
+            {
+                if (de.StatusCode == HttpStatusCode.NotFound)
+                {
+                    await this.client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), user);
+                    this.WriteToConsoleAndPromptToContinue("Created User {0}", user.Id);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        private async Task ReadUserDocument(string databaseName, string collectionName, User user)
+        {
+            try
+            {
+                await this.client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, user.Id), new RequestOptions { PartitionKey = new PartitionKey(user.UserId) });
+                this.WriteToConsoleAndPromptToContinue("Read user {0}", user.Id);
+            }
+            catch (DocumentClientException de)
+            {
+                if (de.StatusCode == HttpStatusCode.NotFound)
+                {
+                    this.WriteToConsoleAndPromptToContinue("User {0} not read", user.Id);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        private async Task ReplaceUserDocument(string databaseName, string collectionName, User updatedUser)
+        {
+            try
+            {
+                await this.client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, updatedUser.Id), updatedUser, new RequestOptions { PartitionKey = new PartitionKey(updatedUser.UserId) });
+                this.WriteToConsoleAndPromptToContinue("Replaced last name for {0}", updatedUser.LastName);
+            }
+            catch (DocumentClientException de)
+            {
+                if (de.StatusCode == HttpStatusCode.NotFound)
+                {
+                    this.WriteToConsoleAndPromptToContinue("User {0} not found for replacement", updatedUser.Id);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+
+        private async Task DeleteUserDocument(string databaseName, string collectionName, User deletedUser)
+        {
+            try
+            {
+                await this.client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, deletedUser.Id), new RequestOptions { PartitionKey = new PartitionKey(deletedUser.UserId) });
+                Console.WriteLine("Deleted user {0}", deletedUser.Id);
+            }
+            catch (DocumentClientException de)
+            {
+                if (de.StatusCode == HttpStatusCode.NotFound)
+                {
+                    this.WriteToConsoleAndPromptToContinue("User {0} not found for deletion", deletedUser.Id);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
 
     }
 }
